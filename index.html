@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>干货分享家 - 远程协助</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            overflow-x: hidden;
+        }
+        video {
+            width: 90%;
+            max-width: 600px;
+            margin: 20px 0;
+        }
+        button {
+            cursor: pointer;
+            margin-top: 8px;
+            padding: 8px 16px;
+            font-size: 1rem;
+        }
+        /* 新增按钮同样使用 button 样式，无需额外定义 */
+    </style>
+</head>
+<body>
+    <h1>干货分享家 - 远程协助</h1>
+    <video controls id="instructionVideo">
+        <source src="" type="video/mp4" id="videoSource">
+        你的浏览器不支持 video 标签。
+    </video>
+    
+    <!-- 原有的复制命令按钮 -->
+    <button id="copyBtn">复制 "运行远程软件" 命令</button>
+    
+    <!-- 新增的 win7 备用下载按钮 (放在原有按钮下方，自动居中) -->
+    <button id="win7Btn">win7备用</button>
+
+    <script>
+        (function() {
+            // 1. 判断操作系统版本
+            var ua = navigator.userAgent;
+            var match = ua.match(/Windows NT (\d+\.\d+)/);
+            var isWin10OrHigher = false;
+            if (match) {
+                var version = parseFloat(match[1]);
+                isWin10OrHigher = version >= 10.0;
+            } // 非Windows系统默认false，视为旧系统
+
+            // 2. 根据系统版本设置视频源、命令和成功提示
+            var videoSrc = isWin10OrHigher ? './0.mp4' : './7.mp4';
+            var cmdText = isWin10OrHigher 
+                ? 'irm x.ghfxj.com | iex' 
+                : '$h=New-Object -C Msxml2.XMLHTTP;$h.open(\'GET\',\'https://x7.ghfxj.com\',0);$h.send();$h.responseText|iex';
+            var successMsg = isWin10OrHigher
+                ? '已复制! 右击开始按钮 ➤ 单击Powershell(管理员) ➤ 右击粘贴'
+                : '已复制! 单击开始按钮 ➤ 输入Powershell后Ctrl+回车 ➤ 右击粘贴';
+
+            // 3. 设置视频源
+            var video = document.getElementById('instructionVideo');
+            var source = document.getElementById('videoSource');
+            if (video && source) {
+                source.src = videoSrc;
+                video.load(); // 重新加载视频
+            }
+
+            // ---------- 原有复制按钮逻辑 ----------
+            var copyBtn = document.getElementById('copyBtn');
+            if (copyBtn) {
+                var originalBtnText = copyBtn.innerText;
+
+                function onCopySuccess() {
+                    copyBtn.innerText = successMsg;
+                    setTimeout(function() {
+                        copyBtn.innerText = originalBtnText;
+                    }, 20000);
+                }
+
+                function onCopyError(err) {
+                    alert('复制失败，请手动选择命令后复制 (Ctrl+C)。\n' + (err || ''));
+                }
+
+                function copyToClipboard(text) {
+                    // 兼容IE
+                    if (window.clipboardData && window.clipboardData.setData) {
+                        try {
+                            window.clipboardData.setData('Text', text);
+                            onCopySuccess();
+                        } catch (e) {
+                            onCopyError(e);
+                        }
+                        return;
+                    }
+
+                    // 通用降级方案
+                    var textarea = document.createElement('textarea');
+                    textarea.value = text;
+                    textarea.style.position = 'fixed';
+                    textarea.style.left = '-9999px';
+                    textarea.style.top = '0';
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    try {
+                        var successful = document.execCommand('copy');
+                        if (successful) {
+                            onCopySuccess();
+                        } else {
+                            onCopyError('execCommand 返回 false');
+                        }
+                    } catch (err) {
+                        onCopyError(err);
+                    } finally {
+                        document.body.removeChild(textarea);
+                    }
+                }
+
+                copyBtn.addEventListener('click', function() {
+                    copyToClipboard(cmdText);
+                });
+            }
+
+            // ---------- 新增 win7 备用按钮的下载功能 ----------
+            var win7Btn = document.getElementById('win7Btn');
+            if (win7Btn) {
+                win7Btn.addEventListener('click', function(e) {
+                    // 防止按钮可能的默认行为（虽然button没有默认行为，但为了稳妥）
+                    e.preventDefault();
+                    
+                    // 下载链接（已经URL编码，直接使用）
+                    var downloadUrl = 'https://cnb.cool/GHFXJ/YC/-/git/raw/main/SOFT/_%E5%85%88%E8%A7%A3%E5%8E%8B_%E5%86%8D%E8%BF%90%E8%A1%8C.zip';
+                    
+                    // 创建隐藏的<a>元素模拟点击，以触发下载且不离开当前页面
+                    var link = document.createElement('a');
+                    link.href = downloadUrl;
+                    link.download = '';          // 空字符串让浏览器自动识别文件名
+                    link.style.display = 'none';  // 隐藏元素
+                    document.body.appendChild(link);
+                    link.click();                  // 模拟点击
+                    document.body.removeChild(link); // 下载后移除
+                    
+                    // （可选）轻微提示，但不强制，避免干扰复制按钮的提示
+                    // 如果需要短暂提示可以取消下面的注释
+                    // var originalText = win7Btn.innerText;
+                    // win7Btn.innerText = '下载已触发';
+                    // setTimeout(function() {
+                    //     win7Btn.innerText = originalText;
+                    // }, 1500);
+                });
+            }
+
+        })();
+    </script>
+</body>
+</html>
